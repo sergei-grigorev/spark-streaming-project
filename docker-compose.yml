@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  # this is our kafka cluster.
+  kafka-cluster:
+    image: landoop/fast-data-dev
+    environment:
+      # for a flume-cluster you should configuire networks cause 127.0.0.1 will not work
+      ADV_HOST: 127.0.0.1    
+      RUNTESTS: 0                 # Disable Running tests so the cluster starts faster
+    ports:
+      - 2181:2181                 # Zookeeper
+      - 3030:3030                 # Landoop UI
+      - 8081-8083:8081-8083       # REST Proxy, Schema Registry, Kafka Connect ports
+      - 9581-9585:9581-9585       # JMX Ports
+      - 9092:9092                 # Kafka Broker   
+
+  flume-cluster:
+    image: probablyfine/flume
+    depends_on:
+      - kafka-cluster
+    environment:
+      FLUME_AGENT_NAME: stopbot
+      kafka_servers: kafka-cluster:9092
+    links:
+      - kafka-cluster
+    volumes:
+      - ./flume-config/config.conf:/opt/flume-config/flume.conf
+      - ./flume-config/log4j.properties:/opt/flume-config/log4j.properties
+      - /tmp/logs:/tmp/logs
+
+  cassandra-cluster:
+    image: cassandra
+    ports:
+      - 9042:9042                 # native protocol clients
+      - 7199:7199                 # JMX Ports 
+
+  ignite-cluster:
+    image: apacheignite/ignite
+    depends_on:
+      - kafka-cluster
+    ports:
+      - 11211:11211
+      - 47100:47100
+      - 47500:47500
+      - 49112:49112

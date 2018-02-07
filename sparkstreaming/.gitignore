@@ -1,0 +1,8 @@
+# intellij idea specific files
+.idea
+*.iml
+
+# other compilation files
+target/
+project/project/
+project/target

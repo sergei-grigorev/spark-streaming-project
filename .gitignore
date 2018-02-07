@@ -1,2 +1,6 @@
 *.class
 *.log
+
+# intellij idea specific files
+.idea
+*.iml
