@@ -35,7 +35,7 @@ object Streaming extends App {
   val sparkConf = new SparkConf()
     .setMaster("local[*]")
     .setAppName(appConf.getString("app.name"))
-    .set("spark.cassandra.connection.host", "127.0.0.1")
+    .set("spark.cassandra.connection.host", appConf.getString("cassandra.server"))
 
   /* spark context */
   val ssc = new StreamingContext(sparkConf, Seconds(appConf.getDuration("spark.batch").getSeconds))
