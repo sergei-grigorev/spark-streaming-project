@@ -23,7 +23,6 @@ object Streaming extends App {
 
   /* application configuration */
   val appConf = ConfigFactory.load
-  val watermarkSec = appConf.getDuration("spark.watermark").getSeconds
   val windowSec = appConf.getDuration("spark.window").getSeconds
   val maxEvents = appConf.getLong("app.max-events")
   val minRate = appConf.getLong("app.min-rate")
@@ -68,16 +67,13 @@ object Streaming extends App {
     }
   }.filter(_.eventType != EventType.Unknown)
 
-  /* watermark for an event time and skip records having time before a window */
-  val watermarkRDD = parsedRDD.transform { rdd =>
-    val time = System.currentTimeMillis()
-    val watermarkBarrier = time - (watermarkSec * 1000)
+  /* skip records having time before a window */
+  val watermarkRDD = parsedRDD.transform { (rdd, window) =>
+    val time = window.milliseconds
     val windowBarrier = time - (windowSec * 1000)
 
     /* we have a problem that we don't have a watermark support out of the box */
-    rdd
-      .filter(watermarkBarrier < _.time)
-      .filter(windowBarrier < _.time)
+    rdd.filter(windowBarrier < _.time)
   }
 
   /* convert to a semigroup (ease to aggregate) */
@@ -87,7 +83,7 @@ object Streaming extends App {
     case Event(_, ip, time, _) => (ip, EventAggregation(0L, 0L, time, time))
   }
 
-  /* aggregate */
+  /* aggregate (we don't need shuffling cause we already combined ip by partitions */
   val windowRdd =
     batchRDD.reduceByKeyAndWindow(
       Semigroup[EventAggregation].combine(_, _),
