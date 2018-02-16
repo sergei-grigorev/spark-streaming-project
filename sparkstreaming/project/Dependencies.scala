@@ -8,6 +8,7 @@ object Dependencies {
   lazy val sparkCore = "org.apache.spark" %% "spark-core" % sparkVersion
   lazy val sparkStreaming = "org.apache.spark" %% "spark-streaming" % sparkVersion
   lazy val kafkaStreaming = "org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion
+  lazy val kafkaSql = "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion
   lazy val sparkSql = "org.apache.spark" %% "spark-sql" % sparkVersion
 
   lazy val cassandra =  "com.datastax.spark" %% "spark-cassandra-connector" % "2.0.7"

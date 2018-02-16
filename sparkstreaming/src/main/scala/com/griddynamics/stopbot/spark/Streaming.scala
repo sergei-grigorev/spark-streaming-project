@@ -24,7 +24,9 @@ object Streaming extends App {
   /* application configuration */
   val appConf = ConfigFactory.load
   val windowSec = appConf.getDuration("spark.window").getSeconds
+  val slideSec = appConf.getDuration("spark.slide").getSeconds
   val maxEvents = appConf.getLong("app.max-events")
+  val minEvents = appConf.getLong("app.min-events")
   val minRate = appConf.getLong("app.min-rate")
   val banTimeMs = appConf.getDuration("app.ban-time").toMillis
   val banRecordTTL = (banTimeMs / 1000).toInt
@@ -88,7 +90,7 @@ object Streaming extends App {
     batchRDD.reduceByKeyAndWindow(
       Semigroup[EventAggregation].combine(_, _),
       Seconds(windowSec),
-      Seconds(appConf.getDuration("spark.slide").getSeconds)
+      Seconds(slideSec)
     )
 
   /* filter suspected */
@@ -96,13 +98,17 @@ object Streaming extends App {
     windowRdd.flatMap {
       case (ip, EventAggregation(clicks, watches, from, to)) =>
         val eventsCount = clicks + watches
-        val rate = if (clicks > 0) watches / clicks else 0
+        if(eventsCount > minEvents) {
+          val rate = if (clicks > 0) watches / clicks else watches
 
-        if (eventsCount > maxEvents) {
-          Some(Incident(ip, to + banTimeMs, s"too much events from ${Instant.ofEpochMilli(from)} to ${Instant.ofEpochMilli(to)}"))
-        } else if (rate < minRate) {
-          Some(Incident(ip, to + banTimeMs, s"too suspicious rate from ${Instant.ofEpochMilli(from)} to ${Instant.ofEpochMilli(to)}"))
-        } else None
+          if (eventsCount > maxEvents) {
+            Some(Incident(ip, to + banTimeMs, s"too much events from ${Instant.ofEpochMilli(from)} to ${Instant.ofEpochMilli(to)}"))
+          } else if (rate < minRate) {
+            Some(Incident(ip, to + banTimeMs, s"too suspicious rate from ${Instant.ofEpochMilli(from)} to ${Instant.ofEpochMilli(to)}"))
+          } else None
+        } else {
+          None
+        }
     }
 
   /* todo check unsuspected by their behaviour */

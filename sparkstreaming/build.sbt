@@ -13,6 +13,7 @@ lazy val root = (project in file(".")).
       sparkStreaming/* % Provided*/,
       sparkSql/* % Provided*/,
       kafkaStreaming,
+      kafkaSql,
       cassandra,
       typeSafeConfig,
       cats,
