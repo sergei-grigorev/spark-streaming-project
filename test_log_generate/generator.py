@@ -80,7 +80,7 @@ def generate(ip, action):
     return json.dumps({
         "type": action,
         "ip": ip,
-        "unix_time": int(round(time.time() * 1000)),
+        "unix_time": int(round(time.time())),
         "url": urls[random.randint(0, urls_max)]
     })
 
