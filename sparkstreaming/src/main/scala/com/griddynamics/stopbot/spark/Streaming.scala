@@ -28,8 +28,8 @@ object Streaming extends App {
   val maxEvents = appConf.getLong("app.max-events")
   val minEvents = appConf.getLong("app.min-events")
   val minRate = appConf.getLong("app.min-rate")
-  val banTimeMs = appConf.getDuration("app.ban-time").toMillis
-  val banRecordTTL = (banTimeMs / 1000).toInt
+  val banTimeSec = appConf.getDuration("app.ban-time").getSeconds
+  val banRecordTTL = (banTimeSec / 1000).toInt
 
   /* spark configuration */
   /* TODO: remove master configuration */
@@ -70,13 +70,12 @@ object Streaming extends App {
   }.filter(_.eventType != EventType.Unknown)
 
   /* skip records having time before a window */
-  val watermarkRDD = parsedRDD.transform { (rdd, window) =>
-    val time = window.milliseconds
-    val windowBarrier = time - (windowSec * 1000)
+  val watermarkRDD = parsedRDD/*.transform { (rdd, window) =>
+    val windowBarrier = (window.milliseconds / 1000) - windowSec
 
     /* we have a problem that we don't have a watermark support out of the box */
     rdd.filter(windowBarrier < _.time)
-  }
+  }*/
 
   /* convert to a semigroup (ease to aggregate) */
   val batchRDD = watermarkRDD.map {
@@ -101,10 +100,11 @@ object Streaming extends App {
         if(eventsCount > minEvents) {
           val rate = if (clicks > 0) watches / clicks else watches
 
+          /* cassandra timestamp uses milliseconds */
           if (eventsCount > maxEvents) {
-            Some(Incident(ip, to + banTimeMs, s"too much events from ${Instant.ofEpochMilli(from)} to ${Instant.ofEpochMilli(to)}"))
+            Some(Incident(ip, (to + banTimeSec) * 1000, s"too much events from ${Instant.ofEpochSecond(from)} to ${Instant.ofEpochSecond(to)}"))
           } else if (rate < minRate) {
-            Some(Incident(ip, to + banTimeMs, s"too suspicious rate from ${Instant.ofEpochMilli(from)} to ${Instant.ofEpochMilli(to)}"))
+            Some(Incident(ip, (to + banTimeSec) * 1000, s"too suspicious rate from ${Instant.ofEpochSecond(from)} to ${Instant.ofEpochSecond(to)}"))
           } else None
         } else {
           None
