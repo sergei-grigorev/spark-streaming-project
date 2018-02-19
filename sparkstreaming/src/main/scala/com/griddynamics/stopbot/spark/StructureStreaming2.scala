@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 /**
   * Structure streaming variant of the same task.
   */
-object StructureStreaming extends App {
+object StructureStreaming2 extends App {
   val logger = Logger("streaming")
 
   /* application configuration */
@@ -40,31 +40,38 @@ object StructureStreaming extends App {
     .option("startingOffsets", appConf.getString("kafka.offset.reset"))
     .load()
 
-  /* key = user_ip, value =  */
+  /* key = user_ip, value = message json */
   val parsed =
     df.select(
-      col("key").cast(StringType),
+      col("key").cast(StringType).as("ip"),
       from_json(col("value").cast(StringType), schema = EventStructType.schema).alias("value")
     )
 
   val aggregated =
     parsed
       .withColumn("eventTime", col("value.unix_time").cast(TimestampType))
-      .selectExpr("key as ip", "value.type as action", "eventTime")
+      .withColumn("clicks", when(col("value.type") === "click", 1).otherwise(0))
+      .withColumn("watches", when(col("value.type") === "watch", 1).otherwise(0))
+      .drop(col("value"))
       .withWatermark("eventTime", s"$watermark seconds")
       .groupBy(
         col("ip"),
         window(col("eventTime"), s"$windowSec seconds", s"$slideSec seconds"))
-      .agg(EventAggregationUdf(col("action"), col("eventTime")).alias("aggregation"))
+      .agg(
+        sum("clicks").as("clicks"),
+        sum("watches").as("watches"),
+        min("eventTime").as("firstEvent"),
+        max("eventTime").as("lastEvent")
+      )
 
   val filtered =
     aggregated
-      .withColumn("total_events", col("aggregation.clicks") + col("aggregation.watches"))
+      .withColumn("total_events", col("clicks") + col("watches"))
       .filter(col("total_events") > minEvents)
       .withColumn(
         "rate",
-        when(col("aggregation.clicks") > 0, col("aggregation.watches") / col("aggregation.clicks"))
-          .otherwise(col("aggregation.watches")))
+        when(col("clicks") > 0, col("watches") / col("clicks"))
+          .otherwise(col("watches")))
       .withColumn(
         "incident",
         when(
@@ -73,28 +80,32 @@ object StructureStreaming extends App {
             lit("too much events: "),
             col("total_events"),
             lit(" from "),
-            col("aggregation.firstEvent"),
+            col("firstEvent"),
             lit(" to "),
-            col("aggregation.lastEvent"))
+            col("lastEvent"))
         ).when(
           col("rate") < minRate,
           concat(
             lit("too small rate: "),
             col("rate"),
             lit(" from "),
-            col("aggregation.firstEvent"),
+            col("firstEvent"),
             lit(" to "),
-            col("aggregation.lastEvent"))
+            col("lastEvent"))
         ).otherwise(null))
       .filter(col("incident").isNotNull)
       .select(col("ip"), col("window"), col("incident"))
 
-    val output =
-      filtered
-        .writeStream
-        .outputMode("update")
-        .format("console")
-        .start()
+  val output =
+    filtered
+      .writeStream
+      .outputMode("update")
+      .format("console")
+      .start()
+
+  /* identify execution plan */
+  logger.info(filtered.queryExecution.logical.toString())
+  filtered.explain()
 
   output.awaitTermination()
 }
