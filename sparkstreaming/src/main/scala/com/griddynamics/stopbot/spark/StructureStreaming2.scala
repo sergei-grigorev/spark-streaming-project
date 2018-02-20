@@ -104,8 +104,7 @@ object StructureStreaming2 extends App {
       .start()
 
   /* identify execution plan */
-  logger.info(filtered.queryExecution.logical.toString())
-  filtered.explain()
+  filtered.explain(true)
 
   output.awaitTermination()
 }

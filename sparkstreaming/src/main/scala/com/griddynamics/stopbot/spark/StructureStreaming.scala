@@ -1,6 +1,7 @@
 package com.griddynamics.stopbot.spark
 
 import com.griddynamics.stopbot.model.EventStructType
+import com.griddynamics.stopbot.spark.StructureStreaming2.filtered
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
@@ -95,6 +96,8 @@ object StructureStreaming extends App {
         .outputMode("update")
         .format("console")
         .start()
+
+  filtered.explain(true)
 
   output.awaitTermination()
 }
