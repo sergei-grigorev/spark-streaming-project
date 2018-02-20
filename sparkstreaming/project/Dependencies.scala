@@ -13,13 +13,16 @@ object Dependencies {
 
   lazy val cassandra =  "com.datastax.spark" %% "spark-cassandra-connector" % "2.0.7"
 
-  lazy val cats = "org.typelevel" %% "cats-core" % "1.0.1"
-  lazy val catsLaws = "org.typelevel" %% "cats-laws" % "1.0.1"
+  lazy val catsVersion = "1.0.1"
+  lazy val cats = "org.typelevel" %% "cats-core" % catsVersion
+  lazy val catsLaws = "org.typelevel" %% "cats-laws" % catsVersion
+  lazy val catsTests = "org.typelevel" %% "cats-testkit" % catsVersion
 
+  lazy val circeVersion = "0.9.1"
   lazy val circe = Seq(
-    "io.circe" %% "circe-core" % "0.9.1",
-    "io.circe" %% "circe-generic" % "0.9.1",
-    "io.circe" %% "circe-parser" % "0.9.1"
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser" % circeVersion
   )
 
   lazy val typeSafeConfig = "com.typesafe" % "config" % "1.3.2"

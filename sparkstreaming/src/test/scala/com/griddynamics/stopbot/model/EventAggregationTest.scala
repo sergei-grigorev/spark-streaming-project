@@ -1,19 +1,26 @@
 package com.griddynamics.stopbot.model
 
-import cats.kernel.laws.SemigroupLaws
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import cats.kernel.Eq
+import cats.kernel.laws.discipline.SemigroupTests
+import cats.tests.CatsSuite
+import org.scalacheck.Arbitrary
 
-class EventAggregationTest extends PropertyChecks with FunSuiteLike {
+class EventAggregationTest extends CatsSuite {
+  import EventAggregationTest._
 
-  test("semigroupAssociative") {
-    forAll { (clicks: Int, watches: Int, from: Long, to: Long) =>
+  checkAll("EventAggregation.SemigroupLaws", SemigroupTests[EventAggregation].semigroup)
+}
 
-      val rs1 = SemigroupLaws[EventAggregation].semigroupAssociative(
-        EventAggregation(clicks, watches, from, to),
-        EventAggregation(clicks, watches, from, to),
-        EventAggregation(clicks, watches, from, to))
-      assert(rs1.lhs == rs1.rhs)
-    }
-  }
+object EventAggregationTest {
+  implicit def eqTree: Eq[EventAggregation] = Eq.fromUniversalEquals
+
+  implicit def arbEventAggregation: Arbitrary[EventAggregation] =
+    Arbitrary(
+      for {
+        clicks <- Arbitrary.arbitrary[Long]
+        watches <- Arbitrary.arbitrary[Long]
+        first <- Arbitrary.arbitrary[Long]
+        last <- Arbitrary.arbitrary[Long]
+      } yield EventAggregation(clicks, watches, first, last)
+    )
 }
