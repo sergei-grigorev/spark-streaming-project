@@ -108,6 +108,8 @@ object DataSetStreaming2 extends App {
       .writeStream
       .outputMode("update")
       .format("console")
+      .option("truncate", value = false)
+      .option("numRows", 50)
       .start()
 
   /* identify execution plan */

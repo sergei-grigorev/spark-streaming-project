@@ -5,6 +5,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.streaming.OutputMode
 import org.apache.spark.sql.types.{StringType, TimestampType}
 
 import scala.collection.JavaConverters._
@@ -29,6 +30,7 @@ object StructureStreaming2 extends App {
     .config("spark.sql.shuffle.partitions", 3)
     .master("local[*]")
     .appName("SparkStructureStreaming")
+    .config("spark.sql.streaming.checkpointLocation", "/tmp/spark-checkpoint")
     .getOrCreate()
 
   /* kafka streaming */
@@ -96,15 +98,16 @@ object StructureStreaming2 extends App {
       .filter(col("incident").isNotNull)
       .select(col("ip"), col("window"), col("incident"))
 
-  val output =
+  val parquet =
     filtered
       .writeStream
-      .outputMode("update")
-      .format("console")
+      .outputMode(OutputMode.Append())
+      .partitionBy("ip")
+      .format("parquet")
+      .option("path", "/tmp/parquet")
       .start()
 
-  /* identify execution plan */
-  filtered.explain(true)
+  parquet.explain(true)
 
-  output.awaitTermination()
+  parquet.awaitTermination()
 }

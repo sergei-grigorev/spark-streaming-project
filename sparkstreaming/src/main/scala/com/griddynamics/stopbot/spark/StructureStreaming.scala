@@ -1,12 +1,12 @@
 package com.griddynamics.stopbot.spark
 
 import com.griddynamics.stopbot.model.EventStructType
-import com.griddynamics.stopbot.spark.StructureStreaming2.filtered
+import com.griddynamics.stopbot.sink.CassandraSinkForeach
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, TimestampType}
+import org.apache.spark.sql.types.{LongType, StringType, TimestampType}
 
 import scala.collection.JavaConverters._
 
@@ -24,6 +24,8 @@ object StructureStreaming extends App {
   val maxEvents = appConf.getLong("app.max-events")
   val minEvents = appConf.getLong("app.min-events")
   val minRate = appConf.getLong("app.min-rate")
+  val banTimeSec = appConf.getDuration("app.ban-time").getSeconds
+  val banRecordTTL = (banTimeSec / 1000).toInt
 
   val spark = SparkSession
     .builder
@@ -88,16 +90,15 @@ object StructureStreaming extends App {
             col("aggregation.lastEvent"))
         ).otherwise(null))
       .filter(col("incident").isNotNull)
-      .select(col("ip"), col("window"), col("incident"))
+      // (to + banTimeSec) * 1000
+      .select(col("ip"), (col("aggregation.lastEvent").cast(LongType) + banTimeSec) * 1000, col("incident"))
 
-    val output =
-      filtered
-        .writeStream
-        .outputMode("update")
-        .format("console")
-        .start()
-
-  filtered.explain(true)
+  val output =
+    filtered
+      .writeStream
+      .outputMode("update")
+      .foreach(new CassandraSinkForeach(appConf, "stopbot", "bots", Set("ip", "period", "reason"), banRecordTTL))
+      .start()
 
   output.awaitTermination()
 }
