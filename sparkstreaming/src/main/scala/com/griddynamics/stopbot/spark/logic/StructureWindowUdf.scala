@@ -32,7 +32,7 @@ object StructureWindowUdf {
       .withColumn(
         "incident",
         when(
-          col("total_events") > maxEvents,
+          col("total_events") >= maxEvents,
           concat(
             lit("too much events: "),
             col("total_events"),
@@ -41,7 +41,7 @@ object StructureWindowUdf {
             lit(" to "),
             col("aggregation.lastEvent"))
         ).when(
-          col("rate") < minRate,
+          col("rate") <= minRate,
           concat(
             lit("too small rate: "),
             col("rate"),

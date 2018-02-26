@@ -1,7 +1,7 @@
 package com.griddynamics.stopbot.spark.logic
 
 import java.time.Instant
-import java.time.temporal.{ChronoField, ChronoUnit, TemporalUnit}
+import java.time.temporal.ChronoUnit
 
 import com.griddynamics.stopbot.model.{Event, EventType, Incident}
 import com.holdenkarau.spark.testing.StreamingSuiteBase

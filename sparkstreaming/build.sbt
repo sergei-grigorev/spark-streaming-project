@@ -22,6 +22,7 @@ lazy val root = (project in file(".")).
       scalaCheck % Test,
       catsLaws % Test,
       catsTests % Test,
-      sparkTests % Test
+      sparkTests % Test,
+      sparkHive % Test
     ) ++ circe
   )

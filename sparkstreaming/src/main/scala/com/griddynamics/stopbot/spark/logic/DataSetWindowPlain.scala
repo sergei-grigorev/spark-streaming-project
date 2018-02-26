@@ -63,9 +63,9 @@ object DataSetWindowPlain {
           val rate = if (a.clicks > 0) (a.watches : Double) / a.clicks else a.watches
 
           /* cassandra timestamp uses milliseconds */
-          if (eventsCount > maxEvents) {
+          if (eventsCount >= maxEvents) {
             Some(Incident(a.ip, a.lastEvent.getTime, s"too much events from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
-          } else if (rate < minRate) {
+          } else if (rate <= minRate) {
             Some(Incident(a.ip, a.lastEvent.getTime, s"too suspicious rate from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
           } else None
         } else {
