@@ -78,7 +78,7 @@ object KafkaRddToCassandra extends App {
       slide = Seconds(appConf.getDuration("spark.slide").getSeconds),
       minEvents = appConf.getLong("app.min-events"),
       maxEvents = appConf.getLong("app.max-events"),
-      minRate = appConf.getLong("app.min-rate")
+      minRate = appConf.getDouble("app.min-rate")
     )
 
   /* save to cassandra */

@@ -13,7 +13,7 @@ object StructureWindowUdf {
                     watermark: Duration,
                     minEvents: Long,
                     maxEvents: Long,
-                    minRate: Long): DataFrame = {
+                    minRate: Double): DataFrame = {
     val aggregated =
       input
         .withWatermark("eventTime", watermark.toString)

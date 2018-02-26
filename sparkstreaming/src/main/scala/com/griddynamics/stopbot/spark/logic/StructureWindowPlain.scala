@@ -13,7 +13,7 @@ object StructureWindowPlain {
                     watermark: Duration,
                     minEvents: Long,
                     maxEvents: Long,
-                    minRate: Long): DataFrame = {
+                    minRate: Double): DataFrame = {
     val aggregated =
       input
         .withColumn("clicks", when(col("action") === "click", 1).otherwise(0))

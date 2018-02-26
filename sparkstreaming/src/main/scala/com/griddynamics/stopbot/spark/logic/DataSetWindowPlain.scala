@@ -30,7 +30,7 @@ object DataSetWindowPlain {
                     watermark: Duration,
                     minEvents: Long,
                     maxEvents: Long,
-                    minRate: Long): Dataset[Incident] = {
+                    minRate: Double): Dataset[Incident] = {
 
     import input.sparkSession.implicits._
 
@@ -60,7 +60,7 @@ object DataSetWindowPlain {
       .flatMap { a =>
         val eventsCount = a.clicks + a.watches
         if (eventsCount > minEvents) {
-          val rate = if (a.clicks > 0) a.watches / a.clicks else a.watches
+          val rate = if (a.clicks > 0) (a.watches : Double) / a.clicks else a.watches
 
           /* cassandra timestamp uses milliseconds */
           if (eventsCount > maxEvents) {

@@ -28,4 +28,6 @@ object Dependencies {
   lazy val typeSafeConfig = "com.typesafe" % "config" % "1.3.2"
 
   lazy val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
+
+  lazy val sparkTests = "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0"
 }

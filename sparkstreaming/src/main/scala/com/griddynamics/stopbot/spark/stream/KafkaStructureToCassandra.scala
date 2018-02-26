@@ -68,7 +68,7 @@ object KafkaStructureToCassandra extends App {
       watermark = appConf.getDuration("spark.watermark"),
       minEvents = appConf.getLong("app.min-events"),
       maxEvents = appConf.getLong("app.max-events"),
-      minRate = appConf.getLong("app.min-rate")
+      minRate = appConf.getDouble("app.min-rate")
     )
 
   val output =

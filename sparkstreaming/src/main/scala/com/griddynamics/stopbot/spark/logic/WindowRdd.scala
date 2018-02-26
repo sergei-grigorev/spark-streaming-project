@@ -16,7 +16,7 @@ object WindowRdd {
                     slide: Duration,
                     minEvents: Long,
                     maxEvents: Long,
-                    minRate: Long,
+                    minRate: Double,
                     skipOld: Boolean = false): DStream[Incident] = {
 
     /* skip records having time before a window */
@@ -50,12 +50,12 @@ object WindowRdd {
       case (ip, EventAggregation(clicks, watches, from, to)) =>
         val eventsCount = clicks + watches
         if (eventsCount > minEvents) {
-          val rate = if (clicks > 0) watches / clicks else watches
+          val rate = if (clicks > 0) (watches: Double) / clicks else watches
 
           /* cassandra timestamp uses milliseconds */
-          if (eventsCount > maxEvents) {
+          if (eventsCount >= maxEvents) {
             Some(Incident(ip, to * 1000, s"too much events from ${Instant.ofEpochSecond(from)} to ${Instant.ofEpochSecond(to)}"))
-          } else if (rate < minRate) {
+          } else if (rate <= minRate) {
             Some(Incident(ip, to * 1000, s"too suspicious rate from ${Instant.ofEpochSecond(from)} to ${Instant.ofEpochSecond(to)}"))
           } else None
         } else {
