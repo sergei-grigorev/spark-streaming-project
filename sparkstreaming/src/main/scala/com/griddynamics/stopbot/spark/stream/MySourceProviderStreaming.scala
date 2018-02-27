@@ -1,4 +1,4 @@
-package com.griddynamics.stopbot.spark
+package com.griddynamics.stopbot.spark.stream
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
@@ -9,7 +9,7 @@ import org.apache.spark.sql.streaming.{OutputMode, Trigger}
 /**
   * Structure streaming for the custom source.
   */
-object StructureStreaming3 extends App {
+object MySourceProviderStreaming extends App {
   val logger = Logger("streaming")
 
   /* application configuration */
@@ -20,7 +20,7 @@ object StructureStreaming3 extends App {
   val spark = SparkSession
     .builder
     .config("spark.sql.shuffle.partitions", 3)
-    .master("local[*]")
+    .master("local[2]")
     .appName("SparkStructureStreaming")
     .config("spark.sql.streaming.checkpointLocation", "/tmp/spark-checkpoint")
     .getOrCreate()
@@ -40,6 +40,7 @@ object StructureStreaming3 extends App {
   val output =
     df
       .writeStream
+      .option("checkpointLocation", "/tmp/spark-checkpoint")
       .outputMode(OutputMode.Update())
       .format("console")
       .trigger(Trigger.ProcessingTime("10 seconds"))
