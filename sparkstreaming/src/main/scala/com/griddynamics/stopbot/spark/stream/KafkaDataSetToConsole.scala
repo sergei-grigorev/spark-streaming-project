@@ -22,7 +22,6 @@ object KafkaDataSetToConsole extends App {
   /* application configuration */
   val appConf = ConfigFactory.load
   val debug = appConf.getBoolean("debug-mode")
-  val banTimeMs = appConf.getDuration("app.ban-time").toMillis
 
   val sparkBuilder = SparkSession
     .builder
@@ -70,7 +69,6 @@ object KafkaDataSetToConsole extends App {
 
   val output =
     filtered
-      .map(i => i.copy(period = i.period + banTimeMs))
       .writeStream
       .outputMode("update")
       .format("console")

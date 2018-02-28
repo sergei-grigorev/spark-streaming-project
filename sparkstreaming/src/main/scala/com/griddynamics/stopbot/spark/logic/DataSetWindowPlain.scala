@@ -22,7 +22,7 @@ object DataSetWindowPlain {
 
   case class Aggregated(ip: String, clicks: Long, watches: Long, firstEvent: Timestamp, lastEvent: Timestamp)
 
-  case class Incident(ip: String, period: Long, reason: String)
+  case class Incident(ip: String, lastEvent: Long, reason: String)
 
   def findIncidents(input: Dataset[Message],
                     window: Duration,
@@ -64,9 +64,9 @@ object DataSetWindowPlain {
 
           /* cassandra timestamp uses milliseconds */
           if (eventsCount >= maxEvents) {
-            Some(Incident(a.ip, a.lastEvent.getTime, s"too much events from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
+            Some(Incident(a.ip, a.lastEvent.toInstant.getEpochSecond, s"too much events: $eventsCount from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
           } else if (rate <= minRate) {
-            Some(Incident(a.ip, a.lastEvent.getTime, s"too suspicious rate from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
+            Some(Incident(a.ip, a.lastEvent.toInstant.getEpochSecond, s"too small rate: $rate from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
           } else None
         } else {
           None
