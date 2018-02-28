@@ -39,14 +39,11 @@ object EventAggregationUdf extends UserDefinedAggregateFunction {
 
     val actionEvent = input.getTimestamp(1)
     if (!buffer.isNullAt(2) && !buffer.isNullAt(3)) {
-      val firstEventAggr =  buffer.getTimestamp(2)
-      val lastEventAggr = buffer.getTimestamp(3)
-
       /* firstEvent min actionEvent */
-      if(actionEvent.before(firstEventAggr)) buffer(2) = actionEvent
+      if(actionEvent.before(buffer.getTimestamp(2))) buffer(2) = actionEvent
 
       /* lastEvent max actionEvent */
-      if(actionEvent.after(lastEventAggr)) buffer(3) = actionEvent
+      if(actionEvent.after(buffer.getTimestamp(3))) buffer(3) = actionEvent
     } else {
       buffer(2) = actionEvent
       buffer(3) = actionEvent
@@ -74,7 +71,7 @@ object EventAggregationUdf extends UserDefinedAggregateFunction {
       val l = buffer1.getTimestamp(3)
       val r = buffer2.getTimestamp(3)
       if(r.after(l)) {
-        buffer1(3) = l
+        buffer1(3) = r
       }
     } else if (!buffer2.isNullAt(3)) {
       buffer1(3) = buffer2.getTimestamp(3)
