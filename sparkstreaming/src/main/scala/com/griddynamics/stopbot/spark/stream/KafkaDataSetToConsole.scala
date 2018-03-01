@@ -1,19 +1,19 @@
 package com.griddynamics.stopbot.spark.stream
 
 import com.griddynamics.stopbot.implicits._
-import com.griddynamics.stopbot.model.{Event2, MessageStructType}
+import com.griddynamics.stopbot.model.{ Event2, MessageStructType }
 import com.griddynamics.stopbot.spark.logic.DataSetWindowPlain
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, TimestampType}
+import org.apache.spark.sql.types.{ StringType, TimestampType }
 
 import scala.collection.JavaConverters._
 
 /**
-  * Structure streaming variant of the same task.
-  */
+ * Structure streaming variant of the same task.
+ */
 object KafkaDataSetToConsole extends App {
   val logger = Logger("streaming")
 
@@ -51,12 +51,10 @@ object KafkaDataSetToConsole extends App {
   val parsed =
     df.select(
       col("key").cast(StringType).as("ip"),
-      from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value")
-    ).select(
-      col("ip"),
-      col("value.type").as("action"),
-      col("value.unix_time").cast(TimestampType).as("eventTime")
-    )
+      from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value")).select(
+        col("ip"),
+        col("value.type").as("action"),
+        col("value.unix_time").cast(TimestampType).as("eventTime"))
       .as[Event2]
 
   val filtered = DataSetWindowPlain
@@ -67,8 +65,7 @@ object KafkaDataSetToConsole extends App {
       watermark = appConf.getDuration("spark.watermark"),
       minEvents = appConf.getLong("app.min-events"),
       maxEvents = appConf.getLong("app.max-events"),
-      minRate = appConf.getDouble("app.min-rate")
-    )
+      minRate = appConf.getDouble("app.min-rate"))
 
   val output =
     filtered

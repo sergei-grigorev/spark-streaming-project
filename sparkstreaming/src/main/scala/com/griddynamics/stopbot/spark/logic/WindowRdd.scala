@@ -9,16 +9,17 @@ import org.apache.spark.streaming.Duration
 import org.apache.spark.streaming.dstream.DStream
 
 /**
-  * RDD way to count events.
-  */
+ * RDD way to count events.
+ */
 object WindowRdd {
-  def findIncidents(input: DStream[Event],
-                    window: Duration,
-                    slide: Duration,
-                    minEvents: Long,
-                    maxEvents: Long,
-                    minRate: Double,
-                    skipOld: Boolean = false): DStream[Incident] = {
+  def findIncidents(
+    input: DStream[Event],
+    window: Duration,
+    slide: Duration,
+    minEvents: Long,
+    maxEvents: Long,
+    minRate: Double,
+    skipOld: Boolean = false): DStream[Incident] = {
 
     /* skip records having time before a window */
     val skippedOld =
@@ -43,8 +44,7 @@ object WindowRdd {
       batchRDD.reduceByKeyAndWindow(
         Semigroup[EventAggregation].combine(_, _),
         window,
-        slide
-      )
+        slide)
 
     /* find incidents */
     windowRdd.flatMap {

@@ -6,11 +6,11 @@ import cats.kernel.Semigroup
 import com.griddynamics.stopbot.implicits._
 
 /**
-  * Event aggregation model (semigroup).
-  *
-  * @param clicks  click events
-  * @param watches watch events
-  */
+ * Event aggregation model (semigroup).
+ *
+ * @param clicks  click events
+ * @param watches watch events
+ */
 case class EventAggregation(clicks: Long, watches: Long, firstEvent: Timestamp, lastEvent: Timestamp)
 
 object EventAggregation {

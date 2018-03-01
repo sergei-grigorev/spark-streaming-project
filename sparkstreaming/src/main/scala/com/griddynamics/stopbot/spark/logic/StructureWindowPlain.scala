@@ -1,23 +1,24 @@
 package com.griddynamics.stopbot.spark.logic
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{window => byWindow, _}
+import org.apache.spark.sql.functions.{ window => byWindow, _ }
 
 import scala.concurrent.duration.Duration
 
 object StructureWindowPlain {
 
   /**
-    * Input model - [[com.griddynamics.stopbot.model.Event2]].
-    * Output model - [[com.griddynamics.stopbot.model.Incident]].
-    */
-  def findIncidents(input: DataFrame,
-                    window: Duration,
-                    slide: Duration,
-                    watermark: Duration,
-                    minEvents: Long,
-                    maxEvents: Long,
-                    minRate: Double): DataFrame = {
+   * Input model - [[com.griddynamics.stopbot.model.Event2]].
+   * Output model - [[com.griddynamics.stopbot.model.Incident]].
+   */
+  def findIncidents(
+    input: DataFrame,
+    window: Duration,
+    slide: Duration,
+    watermark: Duration,
+    minEvents: Long,
+    maxEvents: Long,
+    minRate: Double): DataFrame = {
     val aggregated =
       input
         .withColumn("clicks", when(col("action") === "click", 1).otherwise(0))
@@ -31,8 +32,7 @@ object StructureWindowPlain {
           sum("clicks").as("clicks"),
           sum("watches").as("watches"),
           min("eventTime").as("firstEvent"),
-          max("eventTime").as("lastEvent")
-        )
+          max("eventTime").as("lastEvent"))
 
     aggregated
       .withColumn("total_events", col("clicks") + col("watches"))
@@ -51,17 +51,15 @@ object StructureWindowPlain {
             lit(" from "),
             col("firstEvent"),
             lit(" to "),
-            col("lastEvent"))
-        ).when(
-          col("rate") <= minRate,
-          concat(
-            lit("too small rate: "),
-            col("rate"),
-            lit(" from "),
-            col("firstEvent"),
-            lit(" to "),
-            col("lastEvent"))
-        ).otherwise(null))
+            col("lastEvent"))).when(
+            col("rate") <= minRate,
+            concat(
+              lit("too suspicious rate: "),
+              col("rate"),
+              lit(" from "),
+              col("firstEvent"),
+              lit(" to "),
+              col("lastEvent"))).otherwise(null))
       .filter(col("incident").isNotNull)
       .select(col("ip"), col("lastEvent"), col("incident").as("reason"))
   }

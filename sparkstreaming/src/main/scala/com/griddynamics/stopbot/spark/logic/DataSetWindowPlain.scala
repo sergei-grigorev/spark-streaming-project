@@ -1,26 +1,32 @@
 package com.griddynamics.stopbot.spark.logic
 
 import java.sql.Timestamp
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-import com.griddynamics.stopbot.model.{Event2, Incident}
+import com.griddynamics.stopbot.model.{ Event2, Incident }
 import org.apache.spark.sql.Dataset
-import org.apache.spark.sql.functions.{window => byWindow, _}
+import org.apache.spark.sql.functions.{ window => byWindow, _ }
 
 import scala.concurrent.duration.Duration
 
 object DataSetWindowPlain {
+  private val formatDate: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+      .withZone(ZoneId.systemDefault())
 
   private case class ToAggregate(ip: String, clicks: Long, watches: Long, eventTime: Timestamp)
 
   private case class Aggregated(ip: String, clicks: Long, watches: Long, firstEvent: Timestamp, lastEvent: Timestamp)
 
-  def findIncidents(input: Dataset[Event2],
-                    window: Duration,
-                    slide: Duration,
-                    watermark: Duration,
-                    minEvents: Long,
-                    maxEvents: Long,
-                    minRate: Double): Dataset[Incident] = {
+  def findIncidents(
+    input: Dataset[Event2],
+    window: Duration,
+    slide: Duration,
+    watermark: Duration,
+    minEvents: Long,
+    maxEvents: Long,
+    minRate: Double): Dataset[Incident] = {
 
     import input.sparkSession.implicits._
 
@@ -32,8 +38,7 @@ object DataSetWindowPlain {
             m.ip,
             if (m.action == "click") 1 else 0,
             if (m.action == "watch") 1 else 0,
-            m.eventTime
-          )
+            m.eventTime)
         }
         .withWatermark("eventTime", watermark.toString)
         .groupBy(
@@ -43,8 +48,7 @@ object DataSetWindowPlain {
           sum("clicks").as("clicks"),
           sum("watches").as("watches"),
           min("eventTime").as("firstEvent"),
-          max("eventTime").as("lastEvent")
-        ).as[Aggregated]
+          max("eventTime").as("lastEvent")).as[Aggregated]
 
     aggregated
       .flatMap { a =>
@@ -54,9 +58,21 @@ object DataSetWindowPlain {
 
           /* cassandra timestamp uses milliseconds */
           if (eventsCount >= maxEvents) {
-            Some(Incident(a.ip, a.lastEvent, s"too much events: $eventsCount from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
+            Some(
+              Incident(
+                a.ip,
+                a.lastEvent,
+                s"too much events: $eventsCount " +
+                  s"from ${formatDate.format(a.firstEvent.toInstant)} " +
+                  s"to ${formatDate.format(a.lastEvent.toInstant)}"))
           } else if (rate <= minRate) {
-            Some(Incident(a.ip, a.lastEvent, s"too small rate: $rate from ${a.firstEvent.toInstant} to ${a.lastEvent.toInstant}"))
+            Some(
+              Incident(
+                a.ip,
+                a.lastEvent,
+                s"too suspicious rate: $rate " +
+                  s"from ${formatDate.format(a.firstEvent.toInstant)} " +
+                  s"to ${formatDate.format(a.lastEvent.toInstant)}"))
           } else None
         } else {
           None

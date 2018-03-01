@@ -4,11 +4,11 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.streaming.{OutputMode, Trigger}
+import org.apache.spark.sql.streaming.{ OutputMode, Trigger }
 
 /**
-  * Structure streaming for the custom source.
-  */
+ * Structure streaming for the custom source.
+ */
 object MySourceProviderStreaming extends App {
   val logger = Logger("streaming")
 
@@ -34,8 +34,7 @@ object MySourceProviderStreaming extends App {
     .agg(
       sum("value").as("total"),
       min("value").as("first"),
-      max("value").as("last")
-    )
+      max("value").as("last"))
 
   val output =
     df

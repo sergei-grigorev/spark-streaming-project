@@ -2,19 +2,20 @@ package com.griddynamics.stopbot.spark.logic
 
 import com.griddynamics.stopbot.spark.udf.EventAggregationUdf
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{window => byWindow, _}
+import org.apache.spark.sql.functions.{ window => byWindow, _ }
 
 import scala.concurrent.duration.Duration
 
 object StructureWindowUdf {
 
-  def findIncidents(input: DataFrame,
-                    window: Duration,
-                    slide: Duration,
-                    watermark: Duration,
-                    minEvents: Long,
-                    maxEvents: Long,
-                    minRate: Double): DataFrame = {
+  def findIncidents(
+    input: DataFrame,
+    window: Duration,
+    slide: Duration,
+    watermark: Duration,
+    minEvents: Long,
+    maxEvents: Long,
+    minRate: Double): DataFrame = {
     val aggregated =
       input
         .withWatermark("eventTime", watermark.toString)
@@ -40,17 +41,15 @@ object StructureWindowUdf {
             lit(" from "),
             col("aggregation.firstEvent"),
             lit(" to "),
-            col("aggregation.lastEvent"))
-        ).when(
-          col("rate") <= minRate,
-          concat(
-            lit("too small rate: "),
-            col("rate"),
-            lit(" from "),
-            col("aggregation.firstEvent"),
-            lit(" to "),
-            col("aggregation.lastEvent"))
-        ).otherwise(null))
+            col("aggregation.lastEvent"))).when(
+            col("rate") <= minRate,
+            concat(
+              lit("too suspicious rate: "),
+              col("rate"),
+              lit(" from "),
+              col("aggregation.firstEvent"),
+              lit(" to "),
+              col("aggregation.lastEvent"))).otherwise(null))
       .filter(col("incident").isNotNull)
       .select(col("ip"), col("aggregation.lastEvent").as("lastEvent"), col("incident").as("reason"))
   }

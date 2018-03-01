@@ -6,15 +6,14 @@ import com.datastax.driver.core.Session
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.typesafe.config.Config
-import org.apache.spark.sql.{ForeachWriter, Row}
+import org.apache.spark.sql.{ ForeachWriter, Row }
 
 class CassandraSinkForeach(appConf: Config, keyspace: String, table: String, columns: Set[String], ttl: Int) extends ForeachWriter[Row] {
 
   /* Cassandra connector */
   val pool =
     CassandraConnector(
-      hosts = Set(appConf.getString("cassandra.server")).map(r => InetAddress.getByName(r))
-    )
+      hosts = Set(appConf.getString("cassandra.server")).map(r => InetAddress.getByName(r)))
 
   /* we support duplicates and don't have to check is a partition was saved */
   override def open(partitionId: Long, version: Long): Boolean = true

@@ -4,8 +4,8 @@ import java.sql.Timestamp
 import java.time.Instant
 
 import com.datastax.spark.connector._
-import com.datastax.spark.connector.writer.{TTLOption, WriteConf}
-import com.griddynamics.stopbot.model.{CassandraRecord, Event, EventType, Message}
+import com.datastax.spark.connector.writer.{ TTLOption, WriteConf }
+import com.griddynamics.stopbot.model.{ CassandraRecord, Event, EventType, Message }
 import com.griddynamics.stopbot.spark.logic.WindowRdd
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
@@ -15,7 +15,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.streaming.kafka010.ConsumerStrategies._
 import org.apache.spark.streaming.kafka010.KafkaUtils
 import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
-import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.streaming.{ Seconds, StreamingContext }
 
 import scala.collection.JavaConverters._
 
@@ -82,8 +82,7 @@ object KafkaRddToCassandra extends App {
       slide = Seconds(appConf.getDuration("spark.slide").getSeconds),
       minEvents = appConf.getLong("app.min-events"),
       maxEvents = appConf.getLong("app.max-events"),
-      minRate = appConf.getDouble("app.min-rate")
-    )
+      minRate = appConf.getDouble("app.min-rate"))
 
   /* save to cassandra */
   suspectedRdd

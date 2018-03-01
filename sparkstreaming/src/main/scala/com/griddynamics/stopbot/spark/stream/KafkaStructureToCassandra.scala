@@ -9,13 +9,13 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{LongType, StringType, TimestampType}
+import org.apache.spark.sql.types.{ LongType, StringType, TimestampType }
 
 import scala.collection.JavaConverters._
 
 /**
-  * Structure streaming variant of the same task.
-  */
+ * Structure streaming variant of the same task.
+ */
 object KafkaStructureToCassandra extends App {
   val logger = Logger("streaming")
 
@@ -54,8 +54,7 @@ object KafkaStructureToCassandra extends App {
     df
       .select(
         col("key").cast(StringType),
-        from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value")
-      )
+        from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value"))
       .withColumn("eventTime", col("value.unix_time").cast(TimestampType))
       .selectExpr("key as ip", "value.type as action", "eventTime")
 
@@ -68,8 +67,7 @@ object KafkaStructureToCassandra extends App {
       watermark = appConf.getDuration("spark.watermark"),
       minEvents = appConf.getLong("app.min-events"),
       maxEvents = appConf.getLong("app.max-events"),
-      minRate = appConf.getDouble("app.min-rate")
-    )
+      minRate = appConf.getDouble("app.min-rate"))
 
   val output =
     filtered

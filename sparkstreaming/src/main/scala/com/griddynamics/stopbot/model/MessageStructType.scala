@@ -1,6 +1,6 @@
 package com.griddynamics.stopbot.model
 
-import org.apache.spark.sql.types.{LongType, StringType, StructType}
+import org.apache.spark.sql.types.{ LongType, StringType, StructType }
 
 object MessageStructType {
   val schema: StructType = new StructType()

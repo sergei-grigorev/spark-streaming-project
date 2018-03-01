@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import com.griddynamics.stopbot.model.{Event, EventType, Incident, Message}
+import com.griddynamics.stopbot.model.{ Event, EventType, Incident, Message }
 import com.holdenkarau.spark.testing.StreamingSuiteBase
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
@@ -38,8 +38,7 @@ class WindowRddTest extends FunSuite with StreamingSuiteBase {
           Incident(
             "10.10.10.10",
             Timestamp.from(start.plusSeconds(4)),
-            s"too much events: 5 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(4))}"))
-      )
+            s"too much events: 5 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(4))}")))
 
     testOperation(input, WindowRddTest.callWindowRdd, expected)
   }
@@ -61,8 +60,7 @@ class WindowRddTest extends FunSuite with StreamingSuiteBase {
           Incident(
             "10.10.10.10",
             Timestamp.from(start.plusSeconds(2)),
-            s"too suspicious rate: 0.5 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(2))}"))
-      )
+            s"too suspicious rate: 0.5 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(2))}")))
 
     testOperation(input, WindowRddTest.callWindowRdd, expected)
   }

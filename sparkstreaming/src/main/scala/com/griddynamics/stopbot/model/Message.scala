@@ -1,18 +1,18 @@
 package com.griddynamics.stopbot.model
 
 import com.griddynamics.stopbot.model.EventType.EventType
-import io.circe.{Decoder, HCursor}
+import io.circe.{ Decoder, HCursor }
 import cats.syntax.either._
 import io.circe.Decoder.Result
 
 /**
-  * Input event.
-  *
-  * @param eventType event type
-  * @param ip        user ip-address
-  * @param time      event time
-  * @param url       ads url
-  */
+ * Input event.
+ *
+ * @param eventType event type
+ * @param ip        user ip-address
+ * @param time      event time
+ * @param url       ads url
+ */
 case class Message(eventType: EventType, ip: String, time: Long, url: String)
 
 object Message {

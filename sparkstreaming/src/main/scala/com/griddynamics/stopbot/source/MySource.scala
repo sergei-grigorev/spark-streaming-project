@@ -1,9 +1,9 @@
 package com.griddynamics.stopbot.source
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.sql.execution.streaming.{LongOffset, Offset, Source}
-import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
+import org.apache.spark.sql.{ DataFrame, SQLContext }
+import org.apache.spark.sql.execution.streaming.{ LongOffset, Offset, Source }
+import org.apache.spark.sql.types.{ LongType, StringType, StructField, StructType }
 import org.apache.spark.sql.functions._
 
 class MySource(sqLContext: SQLContext) extends Source with Logging {
@@ -43,6 +43,5 @@ object MySource {
     StructField("key", StringType),
     StructField("value", StringType),
     StructField("topic", StringType),
-    StructField("offset", LongType)
-  ))
+    StructField("offset", LongType)))
 }

@@ -6,7 +6,7 @@ import java.time.Instant
 import cats.kernel.Eq
 import cats.kernel.laws.discipline.SemigroupTests
 import cats.tests.CatsSuite
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.{ Arbitrary, Gen }
 
 class EventAggregationTest extends CatsSuite {
 
@@ -28,6 +28,5 @@ object EventAggregationTest {
         watches <- Arbitrary.arbitrary[Long]
         first <- Arbitrary.arbitrary[Timestamp]
         last <- Arbitrary.arbitrary[Timestamp]
-      } yield EventAggregation(clicks, watches, first, last)
-    )
+      } yield EventAggregation(clicks, watches, first, last))
 }

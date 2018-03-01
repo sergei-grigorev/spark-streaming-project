@@ -1,14 +1,14 @@
 package com.griddynamics.stopbot.spark.udf
 
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
+import org.apache.spark.sql.expressions.{ MutableAggregationBuffer, UserDefinedAggregateFunction }
 import org.apache.spark.sql.types._
 
 object EventAggregationUdf extends UserDefinedAggregateFunction {
 
   override def inputSchema: StructType =
     StructType(
-        StructField("action", StringType) ::
+      StructField("action", StringType) ::
         StructField("eventTime", TimestampType) ::
         Nil)
 
@@ -40,10 +40,10 @@ object EventAggregationUdf extends UserDefinedAggregateFunction {
     val actionEvent = input.getTimestamp(1)
     if (!buffer.isNullAt(2) && !buffer.isNullAt(3)) {
       /* firstEvent min actionEvent */
-      if(actionEvent.before(buffer.getTimestamp(2))) buffer(2) = actionEvent
+      if (actionEvent.before(buffer.getTimestamp(2))) buffer(2) = actionEvent
 
       /* lastEvent max actionEvent */
-      if(actionEvent.after(buffer.getTimestamp(3))) buffer(3) = actionEvent
+      if (actionEvent.after(buffer.getTimestamp(3))) buffer(3) = actionEvent
     } else {
       buffer(2) = actionEvent
       buffer(3) = actionEvent
@@ -56,10 +56,10 @@ object EventAggregationUdf extends UserDefinedAggregateFunction {
     buffer1(1) = buffer1.getLong(1) + buffer2.getLong(1)
 
     /* firstEvent is min or nothing changes */
-    if(!buffer1.isNullAt(2) && !buffer2.isNullAt(2)) {
+    if (!buffer1.isNullAt(2) && !buffer2.isNullAt(2)) {
       val l = buffer1.getTimestamp(2)
       val r = buffer2.getTimestamp(2)
-      if(r.before(l)) {
+      if (r.before(l)) {
         buffer1(2) = r
       }
     } else if (!buffer2.isNullAt(2)) {
@@ -67,10 +67,10 @@ object EventAggregationUdf extends UserDefinedAggregateFunction {
     }
 
     /* lastEvent is max or nothing changes */
-    if(!buffer1.isNullAt(3) && !buffer2.isNullAt(3)) {
+    if (!buffer1.isNullAt(3) && !buffer2.isNullAt(3)) {
       val l = buffer1.getTimestamp(3)
       val r = buffer2.getTimestamp(3)
-      if(r.after(l)) {
+      if (r.after(l)) {
         buffer1(3) = r
       }
     } else if (!buffer2.isNullAt(3)) {

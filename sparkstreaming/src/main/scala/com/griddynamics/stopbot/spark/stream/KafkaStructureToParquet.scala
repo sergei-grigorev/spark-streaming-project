@@ -9,13 +9,13 @@ import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.OutputMode
-import org.apache.spark.sql.types.{StringType, TimestampType}
+import org.apache.spark.sql.types.{ StringType, TimestampType }
 
 import scala.collection.JavaConverters._
 
 /**
-  * Structure streaming variant of the same task.
-  */
+ * Structure streaming variant of the same task.
+ */
 object KafkaStructureToParquet extends App {
   val logger = Logger("streaming")
 
@@ -52,8 +52,7 @@ object KafkaStructureToParquet extends App {
   val parsed =
     df.select(
       col("key").cast(StringType).as("ip"),
-      from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value")
-    )
+      from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value"))
       .withColumn("eventTime", col("value.unix_time").cast(TimestampType))
       .selectExpr("ip", "value.type as action", "eventTime")
 
@@ -66,8 +65,7 @@ object KafkaStructureToParquet extends App {
       watermark = appConf.getDuration("spark.watermark"),
       minEvents = appConf.getLong("app.min-events"),
       maxEvents = appConf.getLong("app.max-events"),
-      minRate = appConf.getDouble("app.min-rate")
-    )
+      minRate = appConf.getDouble("app.min-rate"))
 
   val parquet =
     filtered
