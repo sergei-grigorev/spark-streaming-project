@@ -1,4 +1,4 @@
-package com.griddynamics.stopbot.spark.logic
+package com.griddynamics.stopbot.spark.udf
 
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}

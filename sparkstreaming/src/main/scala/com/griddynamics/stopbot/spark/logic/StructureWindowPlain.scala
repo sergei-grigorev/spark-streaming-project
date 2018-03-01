@@ -7,6 +7,10 @@ import scala.concurrent.duration.Duration
 
 object StructureWindowPlain {
 
+  /**
+    * Input model - [[com.griddynamics.stopbot.model.Event2]].
+    * Output model - [[com.griddynamics.stopbot.model.Incident]].
+    */
   def findIncidents(input: DataFrame,
                     window: Duration,
                     slide: Duration,
@@ -59,5 +63,6 @@ object StructureWindowPlain {
             col("lastEvent"))
         ).otherwise(null))
       .filter(col("incident").isNotNull)
+      .select(col("ip"), col("lastEvent"), col("incident").as("reason"))
   }
 }

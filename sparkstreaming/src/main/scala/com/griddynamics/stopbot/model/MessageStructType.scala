@@ -2,7 +2,7 @@ package com.griddynamics.stopbot.model
 
 import org.apache.spark.sql.types.{LongType, StringType, StructType}
 
-object EventStructType {
+object MessageStructType {
   val schema: StructType = new StructType()
     .add("type", StringType, nullable = false)
     .add("ip", StringType, nullable = false)

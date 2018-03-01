@@ -1,9 +1,10 @@
 package com.griddynamics.stopbot.spark.logic
 
+import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import com.griddynamics.stopbot.model.{Event, EventType, Incident}
+import com.griddynamics.stopbot.model.{Event, EventType, Incident, Message}
 import com.holdenkarau.spark.testing.StreamingSuiteBase
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
@@ -15,11 +16,11 @@ class WindowRddTest extends FunSuite with StreamingSuiteBase {
   test("too much events") {
     val start = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 
-    val batch1 = List(Event(EventType.Watch, "10.10.10.10", start.getEpochSecond, ""))
-    val batch2 = List(Event(EventType.Watch, "10.10.10.10", start.plusSeconds(1).getEpochSecond, ""))
-    val batch3 = List(Event(EventType.Watch, "10.10.10.10", start.plusSeconds(2).getEpochSecond, ""))
-    val batch4 = List(Event(EventType.Watch, "10.10.10.10", start.plusSeconds(3).getEpochSecond, ""))
-    val batch5 = List(Event(EventType.Watch, "10.10.10.10", start.plusSeconds(4).getEpochSecond, ""))
+    val batch1 = List(Event("10.10.10.10", EventType.Watch, Timestamp.from(start)))
+    val batch2 = List(Event("10.10.10.10", EventType.Watch, Timestamp.from(start.plusSeconds(1))))
+    val batch3 = List(Event("10.10.10.10", EventType.Watch, Timestamp.from(start.plusSeconds(2))))
+    val batch4 = List(Event("10.10.10.10", EventType.Watch, Timestamp.from(start.plusSeconds(3))))
+    val batch5 = List(Event("10.10.10.10", EventType.Watch, Timestamp.from(start.plusSeconds(4))))
 
     val input = List(batch1, batch2, batch3, batch4, batch5)
 
@@ -31,13 +32,13 @@ class WindowRddTest extends FunSuite with StreamingSuiteBase {
         List(
           Incident(
             "10.10.10.10",
-            start.plusSeconds(3).toEpochMilli,
-            s"too much events from ${start.toString} to ${start.plusSeconds(3).toString}")),
+            Timestamp.from(start.plusSeconds(3)),
+            s"too much events: 4 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(3))}")),
         List(
           Incident(
             "10.10.10.10",
-            start.plusSeconds(4).toEpochMilli,
-            s"too much events from ${start.toString} to ${start.plusSeconds(4).toString}"))
+            Timestamp.from(start.plusSeconds(4)),
+            s"too much events: 5 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(4))}"))
       )
 
     testOperation(input, WindowRddTest.callWindowRdd, expected)
@@ -46,9 +47,9 @@ class WindowRddTest extends FunSuite with StreamingSuiteBase {
   test("too small rate") {
     val start = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 
-    val batch1 = List(Event(EventType.Watch, "10.10.10.10", start.getEpochSecond, ""))
-    val batch2 = List(Event(EventType.Click, "10.10.10.10", start.plusSeconds(1).getEpochSecond, ""))
-    val batch3 = List(Event(EventType.Click, "10.10.10.10", start.plusSeconds(2).getEpochSecond, ""))
+    val batch1 = List(Event("10.10.10.10", EventType.Watch, Timestamp.from(start)))
+    val batch2 = List(Event("10.10.10.10", EventType.Click, Timestamp.from(start.plusSeconds(1))))
+    val batch3 = List(Event("10.10.10.10", EventType.Click, Timestamp.from(start.plusSeconds(2))))
 
     val input = List(batch1, batch2, batch3)
 
@@ -59,8 +60,8 @@ class WindowRddTest extends FunSuite with StreamingSuiteBase {
         List(
           Incident(
             "10.10.10.10",
-            start.plusSeconds(2).toEpochMilli,
-            s"too suspicious rate from ${start.toString} to ${start.plusSeconds(2).toString}"))
+            Timestamp.from(start.plusSeconds(2)),
+            s"too suspicious rate: 0.5 from ${Timestamp.from(start)} to ${Timestamp.from(start.plusSeconds(2))}"))
       )
 
     testOperation(input, WindowRddTest.callWindowRdd, expected)

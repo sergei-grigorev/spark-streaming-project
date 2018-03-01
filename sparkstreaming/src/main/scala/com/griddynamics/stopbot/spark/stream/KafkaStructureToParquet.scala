@@ -1,7 +1,7 @@
 package com.griddynamics.stopbot.spark.stream
 
 import com.griddynamics.stopbot.implicits._
-import com.griddynamics.stopbot.model.EventStructType
+import com.griddynamics.stopbot.model.MessageStructType
 import com.griddynamics.stopbot.spark.logic.StructureWindowPlain
 import com.griddynamics.stopbot.spark.stream.KafkaDataSetToConsole.appConf
 import com.typesafe.config.ConfigFactory
@@ -52,7 +52,7 @@ object KafkaStructureToParquet extends App {
   val parsed =
     df.select(
       col("key").cast(StringType).as("ip"),
-      from_json(col("value").cast(StringType), schema = EventStructType.schema).alias("value")
+      from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value")
     )
       .withColumn("eventTime", col("value.unix_time").cast(TimestampType))
       .selectExpr("ip", "value.type as action", "eventTime")
@@ -71,7 +71,6 @@ object KafkaStructureToParquet extends App {
 
   val parquet =
     filtered
-      .select(col("ip"), col("window"), col("incident"))
       .writeStream
       .outputMode(OutputMode.Append())
       .partitionBy("ip")

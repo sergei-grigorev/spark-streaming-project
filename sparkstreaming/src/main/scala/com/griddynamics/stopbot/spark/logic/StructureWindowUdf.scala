@@ -1,5 +1,6 @@
 package com.griddynamics.stopbot.spark.logic
 
+import com.griddynamics.stopbot.spark.udf.EventAggregationUdf
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{window => byWindow, _}
 
@@ -51,5 +52,6 @@ object StructureWindowUdf {
             col("aggregation.lastEvent"))
         ).otherwise(null))
       .filter(col("incident").isNotNull)
+      .select(col("ip"), col("aggregation.lastEvent").as("lastEvent"), col("incident").as("reason"))
   }
 }

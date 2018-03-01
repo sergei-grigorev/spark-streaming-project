@@ -1,7 +1,7 @@
 package com.griddynamics.stopbot.spark.stream
 
 import com.griddynamics.stopbot.implicits._
-import com.griddynamics.stopbot.model.EventStructType
+import com.griddynamics.stopbot.model.MessageStructType
 import com.griddynamics.stopbot.sink.CassandraSinkForeach
 import com.griddynamics.stopbot.spark.logic.StructureWindowUdf
 import com.griddynamics.stopbot.spark.stream.KafkaDataSetToConsole.appConf
@@ -54,7 +54,7 @@ object KafkaStructureToCassandra extends App {
     df
       .select(
         col("key").cast(StringType),
-        from_json(col("value").cast(StringType), schema = EventStructType.schema).alias("value")
+        from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value")
       )
       .withColumn("eventTime", col("value.unix_time").cast(TimestampType))
       .selectExpr("key as ip", "value.type as action", "eventTime")
@@ -73,7 +73,7 @@ object KafkaStructureToCassandra extends App {
 
   val output =
     filtered
-      .select(col("ip"), (col("aggregation.lastEvent").cast(LongType) + banTimeSec) * 1000, col("incident"))
+      .select(col("ip"), (col("lastEvent").cast(LongType) + banTimeSec) * 1000, col("reason"))
       .writeStream
       .outputMode("update")
       .foreach(new CassandraSinkForeach(appConf, "stopbot", "bots", Set("ip", "period", "reason"), banRecordTTL))

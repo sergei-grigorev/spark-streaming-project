@@ -1,8 +1,11 @@
 package com.griddynamics.stopbot.spark.stream
 
+import java.sql.Timestamp
+import java.time.Instant
+
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.writer.{TTLOption, WriteConf}
-import com.griddynamics.stopbot.model.{Event, EventType}
+import com.griddynamics.stopbot.model.{CassandraRecord, Event, EventType, Message}
 import com.griddynamics.stopbot.spark.logic.WindowRdd
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
@@ -63,13 +66,14 @@ object KafkaRddToCassandra extends App {
 
   /* parse events and skip incorrect messages */
   val parsedRDD = stream.map { r =>
-    decode[Event](r.value()) match {
+    decode[Message](r.value()) match {
       case scala.util.Right(value) => value
       case scala.util.Left(reason) =>
         logger.warn("incorrect message format", reason)
-        Event(EventType.Unknown, "", 0L, "")
+        Message(EventType.Unknown, "", 0L, "")
     }
   }.filter(_.eventType != EventType.Unknown)
+    .map(r => Event(r.ip, r.eventType, Timestamp.from(Instant.ofEpochSecond(r.time))))
 
   val suspectedRdd =
     WindowRdd.findIncidents(
@@ -83,7 +87,7 @@ object KafkaRddToCassandra extends App {
 
   /* save to cassandra */
   suspectedRdd
-    .map(i => i.copy(period = i.period + banTimeMs))
+    .map(i => CassandraRecord(i.ip, i.lastEvent.toInstant.toEpochMilli + banTimeMs, i.reason))
     .foreachRDD(
       _.saveToCassandra(
         "stopbot",
