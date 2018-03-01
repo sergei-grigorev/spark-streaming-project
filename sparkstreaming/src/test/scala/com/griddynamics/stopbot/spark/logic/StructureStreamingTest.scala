@@ -54,6 +54,43 @@ class StructureStreamingTest extends FunSuite with DatasetSuiteBase with DataFra
     assertDatasetEquals(actual, expected)
   }
 
+
+  //
+  // DataSetWindowUdf
+  //
+  test("DataSetWindowUdf: too much events") {
+    /* input data for group by processing time */
+    val input = spark.createDataset(TooMuchEvents.input)
+
+    /* result */
+    val actual =
+      dataSetWindowUdf(input)
+        .distinct()
+        .sort(col("lastEvent"), col("reason"))
+
+    /* our expectation */
+    val expected = spark.createDataset(TooMuchEvents.expected)
+
+    /* compare this two streams */
+    assertDatasetEquals(actual, expected)
+  }
+
+  test("DataSetWindowUdf: too suspicious rate") {
+    /* input data for group by processing time */
+    val input = spark.createDataset(TooSuspiciousRate.input)
+
+    /* result */
+    val actual =
+      dataSetWindowUdf(input)
+        .distinct()
+
+    /* our expectation */
+    val expected = spark.createDataset(TooSuspiciousRate.expected)
+
+    /* compare this two streams */
+    assertDatasetEquals(actual, expected)
+  }
+
   //
   // StructureWindowPlain
   //
@@ -142,6 +179,9 @@ object StructureStreamingTest {
 
   def dataSetWindowPlain(input: Dataset[Event2]): Dataset[Incident] =
     DataSetWindowPlain.findIncidents(input, 10.seconds, 1.second, 20.seconds, minEvents, maxEvents, minRate)
+
+  def dataSetWindowUdf(input: Dataset[Event2]): Dataset[Incident] =
+    DataSetWindowUdf.findIncidents(input, 10.seconds, 1.second, 20.seconds, minEvents, maxEvents, minRate)
 
   def structureWindowUdf(input: DataFrame): DataFrame =
     StructureWindowUdf.findIncidents(input, 10.seconds, 1.second, 20.seconds, minEvents, maxEvents, minRate)
