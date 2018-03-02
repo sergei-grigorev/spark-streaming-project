@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import com.griddynamics.stopbot.model.Event2WithWindow
 import org.apache.spark.sql.expressions.Aggregator
-import org.apache.spark.sql.{Encoder, Encoders}
+import org.apache.spark.sql.{ Encoder, Encoders }
 
 case class Aggregated(clicks: Long, watches: Long, firstEvent: Timestamp, lastEvent: Timestamp)
 

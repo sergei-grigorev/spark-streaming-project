@@ -18,149 +18,74 @@ class StructureStreamingTest extends FunSuite with DatasetSuiteBase with DataFra
   import StructureStreamingTest._
   import spark.implicits._
 
-  //
-  // DataSetWindowPlain
-  //
-  test("DataSetWindowPlain: too much events") {
-    /* input data for group by processing time */
-    val input = spark.createDataset(TooMuchEvents.input)
+  /* dataset tests */
+  val dataSetImplementations = Seq(
+    ("DataSetWindowPlain", dataSetWindowPlain _),
+    ("DataSetWindowUdf", dataSetWindowUdf _)
+  )
 
-    /* result */
-    val actual =
-      dataSetWindowPlain(input)
-        .distinct()
-        .sort(col("lastEvent"), col("reason"))
+  /* dataframe tests */
+  val dataFrameImplementations = Seq(
+    ("StructureWindowPlain", structureWindowPlain _),
+    ("StructureWindowUdf", structureWindowUdf _)
+  )
 
-    /* our expectation */
-    val expected = spark.createDataset(TooMuchEvents.expected)
+  /* TEST 1: too much events */
+  for ((name, runLogic) <- dataSetImplementations) {
+    test(s"$name.too_much_events") {
+      val input = spark.createDataset(TooMuchEvents.input)
+      val expected = spark.createDataset(TooMuchEvents.expected)
 
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
+      val actual =
+        runLogic(input)
+          .distinct()
+          .sort(col("lastEvent"), col("reason"))
+
+      assertDatasetEquals(actual, expected)
+    }
   }
 
-  test("DataSetWindowPlain: too suspicious rate") {
-    /* input data for group by processing time */
-    val input = spark.createDataset(TooSuspiciousRate.input)
+  for ((name, runLogic) <- dataFrameImplementations) {
+    test(s"$name.too_much_events") {
+      val input = spark.createDataFrame(TooMuchEvents.input)
+      val expected = spark.createDataFrame(TooMuchEvents.expected)
 
-    /* result */
-    val actual =
-      dataSetWindowPlain(input)
-        .distinct()
+      val actual =
+        runLogic(input)
+          .distinct()
+          .sort(col("lastEvent"), col("reason"))
 
-    /* our expectation */
-    val expected = spark.createDataset(TooSuspiciousRate.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
+      assertDataFrameEquals(actual, expected)
+    }
   }
 
+  /* TEST 2: too suspicious rate */
+  for ((name, runLogic) <- dataSetImplementations) {
+    test(s"$name.too_suspicious_rate") {
+      val input = spark.createDataset(TooSuspiciousRate.input)
+      val expected = spark.createDataset(TooSuspiciousRate.expected)
 
-  //
-  // DataSetWindowUdf
-  //
-  test("DataSetWindowUdf: too much events") {
-    /* input data for group by processing time */
-    val input = spark.createDataset(TooMuchEvents.input)
+      val actual =
+        runLogic(input)
+          .distinct()
+          .sort(col("lastEvent"), col("reason"))
 
-    /* result */
-    val actual =
-      dataSetWindowUdf(input)
-        .distinct()
-        .sort(col("lastEvent"), col("reason"))
-
-    /* our expectation */
-    val expected = spark.createDataset(TooMuchEvents.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
+      assertDatasetEquals(actual, expected)
+    }
   }
 
-  test("DataSetWindowUdf: too suspicious rate") {
-    /* input data for group by processing time */
-    val input = spark.createDataset(TooSuspiciousRate.input)
+  for ((name, runLogic) <- dataFrameImplementations) {
+    test(s"$name.too_suspicious_rate") {
+      val input = spark.createDataFrame(TooSuspiciousRate.input)
+      val expected = spark.createDataFrame(TooSuspiciousRate.expected)
 
-    /* result */
-    val actual =
-      dataSetWindowUdf(input)
-        .distinct()
+      val actual =
+        runLogic(input)
+          .distinct()
+          .sort(col("lastEvent"), col("reason"))
 
-    /* our expectation */
-    val expected = spark.createDataset(TooSuspiciousRate.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
-  }
-
-  //
-  // StructureWindowPlain
-  //
-  test("StructureWindowPlain: too much events") {
-    /* input data for group by processing time */
-    val input = spark.createDataFrame(TooMuchEvents.input)
-
-    /* result */
-    val actual =
-      structureWindowPlain(input)
-        .distinct()
-        .sort(col("lastEvent"), col("reason"))
-
-    /* our expectation */
-    val expected = spark.createDataFrame(TooMuchEvents.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
-  }
-
-  test("StructureWindowPlain: too suspicious rate") {
-    /* input data for group by processing time */
-    val input = spark.createDataFrame(TooSuspiciousRate.input)
-
-    /* result */
-    val actual =
-      structureWindowPlain(input)
-        .distinct()
-
-    /* our expectation */
-    val expected = spark.createDataFrame(TooSuspiciousRate.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
-  }
-
-  //
-  // StructureWindowUdf
-  //
-  test("StructureWindowUdf: too much events") {
-    /* input data for group by processing time */
-    val input = spark.createDataFrame(TooMuchEvents.input)
-
-    /* result */
-    val actual =
-      structureWindowUdf(input)
-        .distinct()
-        .sort(col("lastEvent"), col("reason"))
-
-    /* our expectation */
-    val expected = spark.createDataFrame(TooMuchEvents.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
-  }
-
-  test("StructureWindowUdf: too suspicious rate") {
-    /* input data for group by processing time */
-    val input = spark.createDataFrame(TooSuspiciousRate.input)
-
-    /* result */
-    val actual =
-      structureWindowUdf(input)
-        .distinct()
-
-    /* our expectation */
-    val expected = spark.createDataFrame(TooSuspiciousRate.expected)
-
-    /* compare this two streams */
-    assertDatasetEquals(actual, expected)
+      assertDataFrameEquals(actual, expected)
+    }
   }
 }
 

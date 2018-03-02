@@ -4,9 +4,9 @@ import java.sql.Timestamp
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-import com.griddynamics.stopbot.model.{Event2, Incident}
+import com.griddynamics.stopbot.model.{ Event2, Incident }
 import org.apache.spark.sql.Dataset
-import org.apache.spark.sql.functions.{window => byWindow, _}
+import org.apache.spark.sql.functions.{ window => byWindow, _ }
 
 import scala.concurrent.duration.Duration
 
@@ -20,13 +20,13 @@ object DataSetWindowPlain {
   private case class Aggregated(ip: String, clicks: Long, watches: Long, firstEvent: Timestamp, lastEvent: Timestamp)
 
   def findIncidents(
-                     input: Dataset[Event2],
-                     window: Duration,
-                     slide: Duration,
-                     watermark: Duration,
-                     minEvents: Long,
-                     maxEvents: Long,
-                     minRate: Double): Dataset[Incident] = {
+    input: Dataset[Event2],
+    window: Duration,
+    slide: Duration,
+    watermark: Duration,
+    minEvents: Long,
+    maxEvents: Long,
+    minRate: Double): Dataset[Incident] = {
 
     import input.sparkSession.implicits._
 
