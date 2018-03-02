@@ -26,7 +26,8 @@ class StructureStreamingTest extends FunSuite with DatasetSuiteBase with DataFra
   /* dataframe tests */
   val dataFrameImplementations = Seq(
     ("StructureWindowPlain", structureWindowPlain _),
-    ("StructureWindowUdf", structureWindowUdf _))
+    ("StructureWindowUdf", structureWindowUdf _),
+    ("StructureWindowSql", structureWindowSql _))
 
   /* list of tests */
   val tests = Seq(StructureStreamingTest.TooMuchEvents, StructureStreamingTest.TooSuspiciousRate)
@@ -82,6 +83,9 @@ object StructureStreamingTest {
 
   def structureWindowUdf(input: DataFrame): DataFrame =
     StructureWindowUdf.findIncidents(input, window, slide, watermark, minEvents, maxEvents, minRate)
+
+  def structureWindowSql(input: DataFrame): DataFrame =
+    StructureWindowSql.findIncidents(input, window, slide, watermark, minEvents, maxEvents, minRate)
 
   def dataSetWindowPlain(input: Dataset[Event2]): Dataset[Incident] =
     DataSetWindowPlain.findIncidents(input, window, slide, watermark, minEvents, maxEvents, minRate)
