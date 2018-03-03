@@ -8,12 +8,12 @@ import com.datastax.spark.connector.cql.CassandraConnector
 import com.typesafe.config.Config
 import org.apache.spark.sql.{ ForeachWriter, Row }
 
-class CassandraSinkForeach(appConf: Config, keyspace: String, table: String, columns: Set[String], ttl: Int) extends ForeachWriter[Row] {
+class CassandraSinkForeach(servers: Set[String], keyspace: String, table: String, columns: Array[String], ttl: Int) extends ForeachWriter[Row] {
 
   /* Cassandra connector */
   val pool =
     CassandraConnector(
-      hosts = Set(appConf.getString("cassandra.server")).map(r => InetAddress.getByName(r)))
+      hosts = servers.map(r => InetAddress.getByName(r.trim)))
 
   /* we support duplicates and don't have to check is a partition was saved */
   override def open(partitionId: Long, version: Long): Boolean = true
@@ -24,7 +24,7 @@ class CassandraSinkForeach(appConf: Config, keyspace: String, table: String, col
 
       session.execute(
         QueryBuilder.insertInto(keyspace, table)
-          .values(columns.toArray, objects.toArray)
+          .values(columns, objects.toArray)
           .using(QueryBuilder.ttl(ttl)))
     }
   }

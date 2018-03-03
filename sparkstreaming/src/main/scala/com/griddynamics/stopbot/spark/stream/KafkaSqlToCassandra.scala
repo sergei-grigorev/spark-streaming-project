@@ -2,28 +2,27 @@ package com.griddynamics.stopbot.spark.stream
 
 import com.griddynamics.stopbot.implicits._
 import com.griddynamics.stopbot.model.MessageStructType
-import com.griddynamics.stopbot.sink.CassandraSinkForeach
-import com.griddynamics.stopbot.spark.logic.StructureWindowUdf
+import com.griddynamics.stopbot.spark.logic.StructureWindowSql
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{ LongType, StringType, TimestampType }
+import org.apache.spark.sql.streaming.OutputMode
+import org.apache.spark.sql.types.{ LongType, StringType }
 
 import scala.collection.JavaConverters._
 
 /**
  * Structure streaming variant of the same task.
  */
-object KafkaStructureToCassandra extends App {
+object KafkaSqlToCassandra extends App {
   val logger = Logger("streaming")
 
   /* application configuration */
   val appConf = ConfigFactory.load
   val debug = appConf.getBoolean("debug-mode")
   val banTimeSec = appConf.getDuration("app.ban-time").getSeconds
-  val banRecordTTL = (banTimeSec / 1000).toInt
-  val cassandraServers = appConf.getString("cassandra.server").split(";").map(_.trim).toSet
+  val banRecordTTL = banTimeSec
 
   val sparkBuilder = SparkSession
     .builder
@@ -34,6 +33,7 @@ object KafkaStructureToCassandra extends App {
     if (debug) {
       sparkBuilder
         .master("local[2]")
+        .config("spark.sql.streaming.checkpointLocation", "/tmp/spark-checkpoint")
         .getOrCreate()
     } else {
       sparkBuilder
@@ -55,11 +55,9 @@ object KafkaStructureToCassandra extends App {
       .select(
         col("key").cast(StringType),
         from_json(col("value").cast(StringType), schema = MessageStructType.schema).alias("value"))
-      .withColumn("eventTime", col("value.unix_time").cast(TimestampType))
-      .selectExpr("key as ip", "value.type as action", "eventTime")
+      .selectExpr("key as ip", "value.type as action", "cast(value.unix_time as timestamp) as eventTime")
 
-  /* run structure streaming with custom UDF */
-  val filtered = StructureWindowUdf
+  val filtered = StructureWindowSql
     .findIncidents(
       input = parsed,
       window = appConf.getDuration("spark.window"),
@@ -73,8 +71,13 @@ object KafkaStructureToCassandra extends App {
     filtered
       .select(col("ip"), (col("lastEvent").cast(LongType) + banTimeSec) * 1000, col("reason"))
       .writeStream
-      .outputMode("update")
-      .foreach(new CassandraSinkForeach(cassandraServers, "stopbot", "bots", Array("ip", "period", "reason"), banRecordTTL))
+      .outputMode(OutputMode.Update())
+      .format("com.griddynamics.stopbot.sink.CassandraSinkProvider")
+      .option("cassandra.server", appConf.getString("cassandra.server"))
+      .option("cassandra.keyspace", "stopbot")
+      .option("cassandra.table", "bots")
+      .option("cassandra.columns", "ip, period, reason")
+      .option("cassandra.ttl", banRecordTTL)
       .start()
 
   output.awaitTermination()
