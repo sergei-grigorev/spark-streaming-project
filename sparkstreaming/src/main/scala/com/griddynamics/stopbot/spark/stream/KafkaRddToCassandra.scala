@@ -51,6 +51,7 @@ object KafkaRddToCassandra extends App {
     "bootstrap.servers" -> appConf.getString("kafka.brokers"),
     "key.deserializer" -> classOf[StringDeserializer],
     "value.deserializer" -> classOf[StringDeserializer],
+    "max.partition.fetch.bytes" -> appConf.getString("kafka.max.partition.fetch.bytes"),
     "group.id" -> appConf.getString("kafka.group.id"),
     "auto.offset.reset" -> appConf.getString("kafka.offset.reset"),
     "enable.auto.commit" -> (false: java.lang.Boolean))

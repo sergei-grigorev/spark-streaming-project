@@ -46,6 +46,7 @@ object KafkaStructureToParquet extends App {
     .option("kafka.bootstrap.servers", appConf.getString("kafka.brokers"))
     .option("subscribe", appConf.getStringList("kafka.topic").asScala.mkString(","))
     .option("startingOffsets", appConf.getString("kafka.offset.reset"))
+    .option("maxOffsetsPerTrigger", appConf.getLong("kafka.max-offset"))
     .load()
 
   /* key = user_ip, value = message json */
